@@ -17,12 +17,20 @@ const e = require('zigbee-herdsman-converters/lib/exposes');
 // dp 102: cur_current     (value, ro) mA, scale 0
 // dp 107: energy_all      (value, ro) kWh, scale 1
 
-const MODES = ['off', 'eco', 'comfort', 'program', 'hors_gel', 'manual'];
+const MODES = ['off', 'eco', 'comfort', 'program', 'hors_gel', 'holiday'];
 
 // Observed on this device variant:
-// 0=comfort, 1=eco, 2=hors_gel, 4=manual, 5=program
-const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'manual', 5: 'program'};
-const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2, manual: 4};
+// 0=comfort, 1=eco, 2=hors_gel, 4=holiday, 5=program
+const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'holiday', 5: 'program'};
+const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2, holiday: 4};
+
+function isValidVoltage(value) {
+    return value >= 100 && value <= 260;
+}
+
+function isValidCurrent(value) {
+    return value >= 0 && value <= 2000;
+}
 
 function readUint32(data) {
     const padded = [0, 0, 0, 0];
@@ -74,17 +82,18 @@ const fzLocal = {
                 else if (dp === 20) result.fault = v;
                 else if (dp === 24) result.holiday_temperature = v / 10;
                 else if (dp === 50) result.current_heating_setpoint = v / 10;
-                else if (dp === 101) result.voltage = v / 10;
-                else if (dp === 102) result.current = v;
-                else if (dp === 104) result.energy_today = v / 10;
-                else if (dp === 105) result.energy_yesterday = v / 10;
+                else if (dp === 101) {
+                    const voltage = v / 10;
+                    if (isValidVoltage(voltage)) result.voltage = voltage;
+                } else if (dp === 102) {
+                    if (isValidCurrent(v)) result.current = v;
+                }
                 else if (dp === 107) result.energy = v / 10;
                 else if (dp === 116) result.hors_temperature = v / 10;
                 else if (dp === 117) result.eco_temperature = v / 10;
             } else if (dt === 4) { // enum
                 const v = data[0];
                 if (dp === 2) result.preset = modeDpToStr[v] ?? `mode_${v}`;
-                else if (dp === 124) result.work_state = v === 0 ? 'opened' : 'closed';
             }
         }
 
@@ -100,8 +109,8 @@ const tzLocal = {
             const aliasMap = {
                 hors: 'hors_gel',
                 'hors-gel': 'hors_gel',
-                holiday: 'off',
-                holidays: 'off',
+                holidays: 'holiday',
+                manual: 'holiday',
             };
             const mapped = aliasMap[normalizedValue] ?? normalizedValue;
             if (mapped === 'off') {
@@ -175,9 +184,6 @@ module.exports = {
         e.numeric('voltage', e.access.STATE).withUnit('V').withDescription('Tension'),
         e.numeric('current', e.access.STATE).withUnit('mA').withDescription('Courant'),
         e.numeric('energy', e.access.STATE).withUnit('kWh').withDescription('Énergie totale consommée'),
-        e.numeric('energy_today', e.access.STATE).withUnit('kWh').withDescription('Énergie aujourd\'hui'),
-        e.numeric('energy_yesterday', e.access.STATE).withUnit('kWh').withDescription('Énergie hier'),
-        e.enum('work_state', e.access.STATE, ['opened', 'closed']).withDescription('État de chauffe réel'),
         e.numeric('fault', e.access.STATE).withDescription('Code de défaut'),
     ],
 };
