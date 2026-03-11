@@ -1,6 +1,5 @@
 const tuya = require('zigbee-herdsman-converters/lib/tuya');
 const e = require('zigbee-herdsman-converters/lib/exposes');
-const reporting = require('zigbee-herdsman-converters/lib/reporting');
 
 // DP ID => code (from Tuya QueryProperties API)
 // dp 1  : switch          (bool,  rw)
@@ -18,11 +17,12 @@ const reporting = require('zigbee-herdsman-converters/lib/reporting');
 // dp 102: cur_current     (value, ro) mA, scale 0
 // dp 107: energy_all      (value, ro) kWh, scale 1
 
-const MODES = ['comfort', 'eco', 'hors', 'off', 'holiday', 'program', 'manual', 'comfort_1', 'comfort_2'];
+const MODES = ['off', 'eco', 'comfort', 'program', 'hors_gel', 'manual'];
 
-// enum datatype: Tuya sends index; map index <-> string
-const modeIndexToStr = (idx) => MODES[idx] ?? String(idx);
-const modeStrToIndex = (str) => MODES.indexOf(str);
+// Observed on this device variant:
+// 0=comfort, 1=eco, 2=hors_gel, 4=manual, 5=program
+const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'manual', 5: 'program'};
+const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2, manual: 4};
 
 function readUint32(data) {
     const padded = [0, 0, 0, 0];
@@ -38,6 +38,16 @@ function normalizeData(raw) {
     return [];
 }
 
+function decodeTempCurrent(rawValue) {
+    // Tuya cloud declares dp16 as temp_current(scale=1), but some Zigbee variants
+    // appear to report Fahrenheit*10. Auto-detect to provide a usable Celsius value.
+    const t10 = rawValue / 10;
+    if (t10 >= 45) {
+        return Number((((t10 - 32) * 5) / 9).toFixed(1));
+    }
+    return t10;
+}
+
 const fzLocal = {
     cluster: 'manuSpecificTuya',
     type: ['commandDataResponse', 'commandDataReport', 'commandActiveStatusReport'],
@@ -51,16 +61,15 @@ const fzLocal = {
             const data = normalizeData(dpValue.data);
 
             if (dt === 1) { // bool
-                const v = data[0] === 1;
-                if (dp === 1) result.state = v ? 'ON' : 'OFF';
-                else if (dp === 29) result.window_check = v;
-                else if (dp === 39) result.child_lock = v;
+                if (dp === 1) {
+                    const isOn = data[0] === 1;
+                    if (!isOn) result.preset = 'off';
+                }
             } else if (dt === 2) { // 32-bit signed value
                 const raw = readUint32(data);
                 // treat as signed
                 const v = raw > 0x7FFFFFFF ? raw - 0x100000000 : raw;
-                if (dp === 11) result.work_power = v / 10;
-                else if (dp === 16) result.local_temperature = v / 10;
+                if (dp === 16) result.temp_current = decodeTempCurrent(v);
                 else if (dp === 19) result.local_temperature_calibration = v;
                 else if (dp === 20) result.fault = v;
                 else if (dp === 24) result.holiday_temperature = v / 10;
@@ -74,8 +83,8 @@ const fzLocal = {
                 else if (dp === 117) result.eco_temperature = v / 10;
             } else if (dt === 4) { // enum
                 const v = data[0];
-                if (dp === 2) result.preset = modeIndexToStr(v);
-                else if (dp === 17) result.window_open = v === 1;
+                if (dp === 2) result.preset = modeDpToStr[v] ?? `mode_${v}`;
+                else if (dp === 124) result.work_state = v === 0 ? 'opened' : 'closed';
             }
         }
 
@@ -84,69 +93,64 @@ const fzLocal = {
 };
 
 const tzLocal = {
-    state: {
-        key: ['state'],
-        convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointBool(entity, 1, value === 'ON', 'sendData', 1);
-            return {state: {state: value}};
-        },
-    },
     preset: {
         key: ['preset'],
         convertSet: async (entity, key, value, meta) => {
-            const idx = modeStrToIndex(value);
-            if (idx === -1) throw new Error(`Invalid preset: ${value}`);
-            await tuya.sendDataPointEnum(entity, 2, idx, 'sendData', 1);
-            return {state: {preset: value}};
+            const normalizedValue = String(value).toLowerCase();
+            const aliasMap = {
+                hors: 'hors_gel',
+                'hors-gel': 'hors_gel',
+                holiday: 'off',
+                holidays: 'off',
+            };
+            const mapped = aliasMap[normalizedValue] ?? normalizedValue;
+            if (mapped === 'off') {
+                await tuya.sendDataPointBool(entity, 1, false);
+                return {};
+            }
+            const dpEnum = modeStrToDp[mapped];
+            if (dpEnum === undefined) throw new Error(`Invalid preset: ${value}`);
+            // Ensure thermostat is powered before setting mode.
+            await tuya.sendDataPointBool(entity, 1, true);
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            await tuya.sendDataPointEnum(entity, 2, dpEnum);
+            // Wait for device report (dp2) instead of optimistic state to keep UI synced with real LED state.
+            return {};
         },
     },
     current_heating_setpoint: {
         key: ['current_heating_setpoint'],
         convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 50, Math.round(value * 10), 'sendData', 1);
+            await tuya.sendDataPointValue(entity, 50, Math.round(value * 10));
             return {state: {current_heating_setpoint: value}};
         },
     },
     holiday_temperature: {
         key: ['holiday_temperature'],
         convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 24, Math.round(value * 10), 'sendData', 1);
+            await tuya.sendDataPointValue(entity, 24, Math.round(value * 10));
             return {state: {holiday_temperature: value}};
         },
     },
     eco_temperature: {
         key: ['eco_temperature'],
         convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 117, Math.round(value * 10), 'sendData', 1);
+            await tuya.sendDataPointValue(entity, 117, Math.round(value * 10));
             return {state: {eco_temperature: value}};
         },
     },
     hors_temperature: {
         key: ['hors_temperature'],
         convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 116, Math.round(value * 10), 'sendData', 1);
+            await tuya.sendDataPointValue(entity, 116, Math.round(value * 10));
             return {state: {hors_temperature: value}};
         },
     },
     local_temperature_calibration: {
         key: ['local_temperature_calibration'],
         convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 19, Math.round(value), 'sendData', 1);
+            await tuya.sendDataPointValue(entity, 19, Math.round(value));
             return {state: {local_temperature_calibration: value}};
-        },
-    },
-    child_lock: {
-        key: ['child_lock'],
-        convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointBool(entity, 39, value === true || value === 'LOCK', 'sendData', 1);
-            return {state: {child_lock: value}};
-        },
-    },
-    window_check: {
-        key: ['window_check'],
-        convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointBool(entity, 29, value === true || value === 'ON', 'sendData', 1);
-            return {state: {window_check: value}};
         },
     },
 };
@@ -161,24 +165,19 @@ module.exports = {
     onEvent: tuya.onEventSetTime,
     configure: tuya.configureMagicPacket,
     exposes: [
-        e.switch(),
-        e.numeric('local_temperature', e.access.STATE).withUnit('°C').withDescription('Température mesurée'),
-        e.numeric('current_heating_setpoint', e.access.ALL).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne température'),
-        e.enum('preset', e.access.ALL, MODES).withDescription('Mode de fonctionnement'),
-        e.numeric('holiday_temperature', e.access.ALL).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode vacances'),
-        e.numeric('eco_temperature', e.access.ALL).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode éco'),
-        e.numeric('hors_temperature', e.access.ALL).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne hors-gel'),
-        e.numeric('local_temperature_calibration', e.access.ALL).withUnit('°C').withValueMin(-9).withValueMax(9).withValueStep(1).withDescription('Correction température'),
-        e.binary('child_lock', e.access.ALL, true, false).withDescription('Verrouillage enfant'),
-        e.binary('window_check', e.access.ALL, true, false).withDescription('Détection fenêtre ouverte'),
-        e.binary('window_open', e.access.STATE, true, false).withDescription('État fenêtre'),
-        e.numeric('work_power', e.access.STATE).withUnit('W').withDescription('Puissance instantanée'),
+        e.numeric('temp_current', e.access.STATE).withUnit('°C').withDescription('Température mesurée (dp_16)'),
+        e.numeric('current_heating_setpoint', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne température'),
+        e.enum('preset', e.access.STATE_SET, MODES).withDescription('Mode de fonctionnement'),
+        e.numeric('holiday_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode vacances'),
+        e.numeric('eco_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode éco'),
+        e.numeric('hors_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne hors-gel'),
+        e.numeric('local_temperature_calibration', e.access.STATE_SET).withUnit('°C').withValueMin(-9).withValueMax(9).withValueStep(1).withDescription('Correction température'),
         e.numeric('voltage', e.access.STATE).withUnit('V').withDescription('Tension'),
         e.numeric('current', e.access.STATE).withUnit('mA').withDescription('Courant'),
         e.numeric('energy', e.access.STATE).withUnit('kWh').withDescription('Énergie totale consommée'),
         e.numeric('energy_today', e.access.STATE).withUnit('kWh').withDescription('Énergie aujourd\'hui'),
         e.numeric('energy_yesterday', e.access.STATE).withUnit('kWh').withDescription('Énergie hier'),
+        e.enum('work_state', e.access.STATE, ['opened', 'closed']).withDescription('État de chauffe réel'),
         e.numeric('fault', e.access.STATE).withDescription('Code de défaut'),
-        e.linkquality(),
     ],
 };

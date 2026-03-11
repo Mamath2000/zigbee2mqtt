@@ -37,3 +37,11 @@ external_converters:
 devices:
   '0xa4c1388293650847':
     friendly_name: '0xa4c1388293650847'
+    filtered_attributes:
+      - '^work_power$'
+      - '^state$'
+      - '^cur_voltage$'
+      - '^cur_current$'
+      - '^energy_all$'
+      - '^holiday_temp_set$'
+      - '^dp_.*$'

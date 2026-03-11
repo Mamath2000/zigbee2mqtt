@@ -1,20 +1,28 @@
 {
     "0xa4c1388293650847": {
-        "dp_101": 2320,
+        "dp_101": 2310,
         "dp_101_type": 2,
         "dp_16": 645,
         "dp_16_type": 2,
         "dp_102": 10,
         "dp_102_type": 2,
-        "work_power": 64.5,
+        "work_power": 70,
         "dp_107": 0,
         "dp_107_type": 2,
         "fault": 0,
-        "temp_current": 232,
+        "temp_current": 25,
         "holiday_temp_set": 1,
-        "linkquality": 220,
-        "cur_voltage": 232,
+        "linkquality": 236,
+        "cur_voltage": 231,
         "cur_current": 10,
-        "energy_all": 0
+        "energy_all": 0,
+        "current": 181,
+        "voltage": 2,
+        "energy": 0,
+        "state": "ON",
+        "preset": "comfort",
+        "holiday_temperature": 19,
+        "current_heating_setpoint": 20,
+        "local_temperature_calibration": 0
     }
 }
