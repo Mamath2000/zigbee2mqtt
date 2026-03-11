@@ -1,0 +1,23 @@
+services:
+  zigbee:
+    container_name: zigbee
+    image: koenkk/zigbee2mqtt:latest
+    stop_grace_period: 60s
+    volumes:
+      - ./config:/app/data
+      - /run/udev:/run/udev:ro
+    restart: always
+    environment:
+      - TZ=Europe/Paris
+#      - Z2M_WATCHDOG=5,10,30
+    devices:
+      # Make sure this matched your adapter location
+      #- /dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_568078518491ed11b233cad13b20a988-if00-port0:/dev/ttyUSB1
+      - /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231219101110-if00:/dev/ttyUSB1
+#    ports:
+#      - 3335:8091
+#    privileged: true
+    group_add:
+      - dialout
+    user: 1000:1000
+    network_mode: host

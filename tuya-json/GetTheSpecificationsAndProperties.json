@@ -1,0 +1,127 @@
+{
+  "result": {
+    "category": "wk",
+    "functions": [
+      {
+        "code": "switch",
+        "desc": "{}",
+        "name": "开关",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "mode",
+        "desc": "{\"range\":[\"eco\",\"holiday\",\"program\",\"manual\"]}",
+        "name": "工作模式",
+        "type": "Enum",
+        "values": "{\"range\":[\"eco\",\"holiday\",\"program\",\"manual\"]}"
+      },
+      {
+        "code": "temp_correction",
+        "desc": "{\"min\":-9,\"max\":9,\"scale\":0,\"step\":1}",
+        "name": "温度校准",
+        "type": "Integer",
+        "values": "{\"min\":-9,\"max\":9,\"scale\":0,\"step\":1}"
+      },
+      {
+        "code": "holiday_temp_set",
+        "desc": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}",
+        "name": "假日模式温度设置",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      },
+      {
+        "code": "window_check",
+        "desc": "{}",
+        "name": "开窗检测",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "child_lock",
+        "desc": "{}",
+        "name": "童锁",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "temp_set",
+        "desc": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}",
+        "name": "温度设置",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      }
+    ],
+    "status": [
+      {
+        "code": "switch",
+        "name": "开关",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "mode",
+        "name": "工作模式",
+        "type": "Enum",
+        "values": "{\"range\":[\"eco\",\"holiday\",\"program\",\"manual\"]}"
+      },
+      {
+        "code": "work_power",
+        "name": "当前功率",
+        "type": "Integer",
+        "values": "{\"unit\":\"w\",\"min\":0,\"max\":50000,\"scale\":1,\"step\":1}"
+      },
+      {
+        "code": "temp_current",
+        "name": "当前温度",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":-100,\"max\":5000,\"scale\":1,\"step\":1}"
+      },
+      {
+        "code": "window_state",
+        "name": "窗户状态",
+        "type": "Enum",
+        "values": "{\"range\":[\"close\",\"open\"]}"
+      },
+      {
+        "code": "temp_correction",
+        "name": "温度校准",
+        "type": "Integer",
+        "values": "{\"min\":-9,\"max\":9,\"scale\":0,\"step\":1}"
+      },
+      {
+        "code": "fault",
+        "name": "故障告警",
+        "type": "Bitmap",
+        "values": "{\"label\":[\"e1\",\"e2\",\"e3\"]}"
+      },
+      {
+        "code": "holiday_temp_set",
+        "name": "假日模式温度设置",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      },
+      {
+        "code": "window_check",
+        "name": "开窗检测",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "child_lock",
+        "name": "童锁",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "temp_set",
+        "name": "温度设置",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      }
+    ]
+  },
+  "success": true,
+  "t": 1773189739696,
+  "tid": "29054a761ce311f18410e21ddda0be51"
+}

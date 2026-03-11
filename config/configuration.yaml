@@ -1,0 +1,39 @@
+homeassistant:
+  enabled: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://192.168.100.190
+  user: zigbee2mqtt
+  password: sf6QGnwZiJFXfti3Z8q
+  client_id: zigbee_mqtt
+  keepalive: 60
+  reject_unauthorized: true
+  version: 5
+serial:
+  port: /dev/ttyUSB1
+  adapter: ember
+frontend:
+  enabled: true
+  port: 8091
+  host: 0.0.0.0
+advanced:
+  log_level: debug
+  log_syslog:
+    app_name: Zigbee2MQTT
+    eol: /n
+    host: localhost
+    localhost: localhost
+    path: /dev/log
+    pid: process.pid
+    port: 514
+    protocol: udp4
+    type: '5424'
+  channel: 11
+  last_seen: disable
+  elapsed: true
+version: 5
+external_converters:
+  - external_converters/ts0601_tze204_fu1bfwza.js
+devices:
+  '0xa4c1388293650847':
+    friendly_name: '0xa4c1388293650847'

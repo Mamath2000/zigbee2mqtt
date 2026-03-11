@@ -1,0 +1,505 @@
+{
+  "result": {
+    "properties": [
+      {
+        "code": "switch",
+        "custom_name": "",
+        "dp_id": 1,
+        "time": 1759358436048,
+        "type": "bool",
+        "value": true
+      },
+      {
+        "code": "mode",
+        "custom_name": "",
+        "dp_id": 2,
+        "time": 1759359050809,
+        "type": "enum",
+        "value": "holiday"
+      },
+      {
+        "code": "work_power",
+        "custom_name": "",
+        "dp_id": 11,
+        "time": 1759358431732,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "temp_current",
+        "custom_name": "",
+        "dp_id": 16,
+        "time": 1759359076846,
+        "type": "value",
+        "value": 270
+      },
+      {
+        "code": "window_state",
+        "custom_name": "",
+        "dp_id": 17,
+        "time": 1759358436393,
+        "type": "enum",
+        "value": "close"
+      },
+      {
+        "code": "temp_correction",
+        "custom_name": "",
+        "dp_id": 19,
+        "time": 1759358964763,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "fault",
+        "custom_name": "",
+        "dp_id": 20,
+        "time": 1759358431732,
+        "type": "bitmap",
+        "value": 0
+      },
+      {
+        "code": "holiday_temp_set",
+        "custom_name": "",
+        "dp_id": 24,
+        "time": 1759358437707,
+        "type": "value",
+        "value": 90
+      },
+      {
+        "code": "window_check",
+        "custom_name": "",
+        "dp_id": 29,
+        "time": 1759358437486,
+        "type": "bool",
+        "value": true
+      },
+      {
+        "code": "child_lock",
+        "custom_name": "",
+        "dp_id": 39,
+        "time": 1759358979692,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "temp_set",
+        "custom_name": "",
+        "dp_id": 50,
+        "time": 1759358436590,
+        "type": "value",
+        "value": 200
+      },
+      {
+        "code": "cur_voltage",
+        "custom_name": "",
+        "dp_id": 101,
+        "time": 1759359078847,
+        "type": "value",
+        "value": 2320
+      },
+      {
+        "code": "cur_current",
+        "custom_name": "",
+        "dp_id": 102,
+        "time": 1759359041225,
+        "type": "value",
+        "value": 11
+      },
+      {
+        "code": "temp_sensitivity",
+        "custom_name": "",
+        "dp_id": 103,
+        "time": 1759358437044,
+        "type": "value",
+        "value": 5
+      },
+      {
+        "code": "energy_today",
+        "custom_name": "",
+        "dp_id": 104,
+        "time": 1759358431732,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "energy_yesterday",
+        "custom_name": "",
+        "dp_id": 105,
+        "time": 1759358431732,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "device_mode_type",
+        "custom_name": "",
+        "dp_id": 106,
+        "time": 1759358436936,
+        "type": "enum",
+        "value": "four"
+      },
+      {
+        "code": "energy_all",
+        "custom_name": "",
+        "dp_id": 107,
+        "time": 1759358437631,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "week_program_18_1",
+        "custom_name": "",
+        "dp_id": 108,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_2",
+        "custom_name": "",
+        "dp_id": 109,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_3",
+        "custom_name": "",
+        "dp_id": 110,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_4",
+        "custom_name": "",
+        "dp_id": 111,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_5",
+        "custom_name": "",
+        "dp_id": 112,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_6",
+        "custom_name": "",
+        "dp_id": 113,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_7",
+        "custom_name": "",
+        "dp_id": 114,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "set_temp_btn",
+        "custom_name": "",
+        "dp_id": 115,
+        "time": 1759358431732,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "hors_temp_set",
+        "custom_name": "",
+        "dp_id": 116,
+        "time": 1759358437197,
+        "type": "value",
+        "value": 50
+      },
+      {
+        "code": "eco_temp_set",
+        "custom_name": "",
+        "dp_id": 117,
+        "time": 1759358437109,
+        "type": "value",
+        "value": 150
+      },
+      {
+        "code": "windows_time_set",
+        "custom_name": "",
+        "dp_id": 118,
+        "time": 1759358437560,
+        "type": "value",
+        "value": 40
+      },
+      {
+        "code": "comfort_mode_btn",
+        "custom_name": "",
+        "dp_id": 119,
+        "time": 1759358431732,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "night_btn",
+        "custom_name": "",
+        "dp_id": 120,
+        "time": 1759358437267,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "night_time_start",
+        "custom_name": "",
+        "dp_id": 121,
+        "time": 1759358437341,
+        "type": "value",
+        "value": 1380
+      },
+      {
+        "code": "night_time_end",
+        "custom_name": "",
+        "dp_id": 122,
+        "time": 1759358437412,
+        "type": "value",
+        "value": 480
+      },
+      {
+        "code": "reset_all",
+        "custom_name": "",
+        "dp_id": 123,
+        "time": 1759358431732,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "work_state",
+        "custom_name": "",
+        "dp_id": 124,
+        "time": 1759358436193,
+        "type": "enum",
+        "value": "closed"
+      },
+      {
+        "code": "week_program_18_1_1",
+        "custom_name": "",
+        "dp_id": 125,
+        "time": 1759358437783,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_1_2",
+        "custom_name": "",
+        "dp_id": 126,
+        "time": 1759358437953,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_1_3",
+        "custom_name": "",
+        "dp_id": 127,
+        "time": 1759358438064,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_1_4",
+        "custom_name": "",
+        "dp_id": 128,
+        "time": 1759358438169,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_2_1",
+        "custom_name": "",
+        "dp_id": 129,
+        "time": 1759358438271,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_2_2",
+        "custom_name": "",
+        "dp_id": 130,
+        "time": 1759358438388,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_2_3",
+        "custom_name": "",
+        "dp_id": 131,
+        "time": 1759358438533,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_2_4",
+        "custom_name": "",
+        "dp_id": 132,
+        "time": 1759358438642,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_3_1",
+        "custom_name": "",
+        "dp_id": 133,
+        "time": 1759358438758,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_3_2",
+        "custom_name": "",
+        "dp_id": 134,
+        "time": 1759358438865,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_3_3",
+        "custom_name": "",
+        "dp_id": 135,
+        "time": 1759358438983,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_3_4",
+        "custom_name": "",
+        "dp_id": 136,
+        "time": 1759358439095,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_4_1",
+        "custom_name": "",
+        "dp_id": 137,
+        "time": 1759358431732,
+        "type": "raw"
+      },
+      {
+        "code": "week_program_18_4_2",
+        "custom_name": "",
+        "dp_id": 138,
+        "time": 1759358439202,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_4_3",
+        "custom_name": "",
+        "dp_id": 139,
+        "time": 1759358439327,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_4_4",
+        "custom_name": "",
+        "dp_id": 140,
+        "time": 1759358439431,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_5_1",
+        "custom_name": "",
+        "dp_id": 141,
+        "time": 1759358439536,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_5_2",
+        "custom_name": "",
+        "dp_id": 142,
+        "time": 1759358439639,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_5_3",
+        "custom_name": "",
+        "dp_id": 143,
+        "time": 1759358439741,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_5_4",
+        "custom_name": "",
+        "dp_id": 144,
+        "time": 1759358439855,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_6_1",
+        "custom_name": "",
+        "dp_id": 145,
+        "time": 1759358439958,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_6_2",
+        "custom_name": "",
+        "dp_id": 146,
+        "time": 1759358440070,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_6_3",
+        "custom_name": "",
+        "dp_id": 147,
+        "time": 1759358440177,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_6_4",
+        "custom_name": "",
+        "dp_id": 148,
+        "time": 1759358440283,
+        "type": "raw",
+        "value": "VVVVVVVVVVVVVVVV"
+      },
+      {
+        "code": "week_program_18_7_1",
+        "custom_name": "",
+        "dp_id": 149,
+        "time": 1759358440388,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_7_2",
+        "custom_name": "",
+        "dp_id": 150,
+        "time": 1759358440492,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_7_3",
+        "custom_name": "",
+        "dp_id": 151,
+        "time": 1759358440595,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      },
+      {
+        "code": "week_program_18_7_4",
+        "custom_name": "",
+        "dp_id": 152,
+        "time": 1759358440698,
+        "type": "raw",
+        "value": "ERERERERERERERER"
+      }
+    ]
+  },
+  "success": true,
+  "t": 1773189658459,
+  "tid": "f89a81bc1ce211f1a0e39aa9e01ed45b"
+}

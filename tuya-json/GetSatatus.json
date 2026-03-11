@@ -1,0 +1,51 @@
+{
+  "result": [
+    {
+      "code": "switch",
+      "value": true
+    },
+    {
+      "code": "mode",
+      "value": "holiday"
+    },
+    {
+      "code": "work_power",
+      "value": 0
+    },
+    {
+      "code": "temp_current",
+      "value": 270
+    },
+    {
+      "code": "window_state",
+      "value": "close"
+    },
+    {
+      "code": "temp_correction",
+      "value": 0
+    },
+    {
+      "code": "fault",
+      "value": 0
+    },
+    {
+      "code": "holiday_temp_set",
+      "value": 90
+    },
+    {
+      "code": "window_check",
+      "value": true
+    },
+    {
+      "code": "child_lock",
+      "value": false
+    },
+    {
+      "code": "temp_set",
+      "value": 200
+    }
+  ],
+  "success": true,
+  "t": 1773189440448,
+  "tid": "76a852be1ce211f18255b6b5e3717ca9"
+}

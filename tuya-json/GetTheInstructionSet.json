@@ -1,0 +1,59 @@
+{
+  "result": {
+    "category": "wk",
+    "functions": [
+      {
+        "code": "switch",
+        "desc": "switch",
+        "name": "switch",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "mode",
+        "desc": "mode",
+        "name": "mode",
+        "type": "Enum",
+        "values": "{\"range\":[\"eco\",\"holiday\",\"program\",\"manual\"]}"
+      },
+      {
+        "code": "temp_correction",
+        "desc": "temp correction",
+        "name": "temp correction",
+        "type": "Integer",
+        "values": "{\"min\":-9,\"max\":9,\"scale\":0,\"step\":1}"
+      },
+      {
+        "code": "holiday_temp_set",
+        "desc": "holiday temp set",
+        "name": "holiday temp set",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      },
+      {
+        "code": "window_check",
+        "desc": "window check",
+        "name": "window check",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "child_lock",
+        "desc": "child lock",
+        "name": "child lock",
+        "type": "Boolean",
+        "values": "{}"
+      },
+      {
+        "code": "temp_set",
+        "desc": "temp set",
+        "name": "temp set",
+        "type": "Integer",
+        "values": "{\"unit\":\"℃\",\"min\":50,\"max\":400,\"scale\":1,\"step\":5}"
+      }
+    ]
+  },
+  "success": true,
+  "t": 1773189799441,
+  "tid": "4ca3c17c1ce311f18255b6b5e3717ca9"
+}
