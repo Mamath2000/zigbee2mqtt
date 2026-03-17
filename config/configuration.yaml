@@ -45,3 +45,16 @@ devices:
       - '^energy_all$'
       - '^holiday_temp_set$'
       - '^dp_.*$'
+    homeassistant:
+      comfort_temperature:
+        mode: box
+      eco_temperature:
+        mode: box
+      holiday_temperature:
+        mode: box
+      hors_temperature:
+        mode: box
+      hysteresis:
+        mode: box
+      local_temperature_calibration:
+        mode: box

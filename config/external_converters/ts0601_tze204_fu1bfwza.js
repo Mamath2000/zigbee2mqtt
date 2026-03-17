@@ -20,17 +20,20 @@ const e = require('zigbee-herdsman-converters/lib/exposes');
 
 // Observed on this device variant:
 // 0=comfort, 1=eco, 2=hors_gel, 4=holiday, 5=program
-const PRESETS = ['off', 'comfort', 'eco', 'hors_gel', 'holiday'];
+const PRESETS = ['off', 'comfort', 'eco', 'hors_gel', 'holiday', 'program'];
 const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'holiday', 5: 'program'};
 const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2, holiday: 4};
 const HEAT_MODE = 'comfort';
 const DEFAULT_HYSTERESIS = 0.5;
+const PROGRAM_DURATION_MS = 2 * 60 * 60 * 1000;
+const PROGRAM_RETURN_PRESET = 'eco';
 const DEFAULT_SETPOINTS = {
     comfort: 20,
     eco: 16,
     holiday: 18,
     hors_gel: 8,
 };
+const programTimers = new Map();
 
 function isValidVoltage(value) {
     return value >= 100 && value <= 260;
@@ -85,10 +88,89 @@ function normalizePreset(value) {
         'hors-gel': 'hors_gel',
         holidays: 'holiday',
         manual: 'comfort',
-        program: 'comfort',
         heat: 'comfort',
     };
     return aliasMap[normalizedValue] ?? normalizedValue;
+}
+
+function getControlPreset(preset) {
+    return normalizePreset(preset) === 'program' ? 'comfort' : normalizePreset(preset);
+}
+
+function getEntityKey(entityOrDevice) {
+    if (!entityOrDevice) return undefined;
+    if (entityOrDevice.ieeeAddr) return entityOrDevice.ieeeAddr;
+    if (typeof entityOrDevice.getDevice === 'function') {
+        const device = entityOrDevice.getDevice();
+        if (device && device.ieeeAddr) return device.ieeeAddr;
+    }
+    if (entityOrDevice.deviceIeeeAddress) return entityOrDevice.deviceIeeeAddress;
+    return undefined;
+}
+
+async function sendPresetMode(entity, preset) {
+    const modeDp = modeStrToDp[preset];
+    if (modeDp !== undefined) {
+        await tuya.sendDataPointEnum(entity, 2, modeDp);
+    }
+}
+
+function clearProgramTimer(entityOrDevice) {
+    const key = getEntityKey(entityOrDevice);
+    if (!key) return;
+
+    const activeTimer = programTimers.get(key);
+    if (activeTimer) {
+        clearTimeout(activeTimer.timeoutId);
+        programTimers.delete(key);
+    }
+}
+
+async function revertProgramPreset(device) {
+    clearProgramTimer(device);
+
+    if (!device || !device.meta || !device.meta.state) return;
+    if (normalizePreset(device.meta.state.preset) !== 'program') return;
+
+    const endpoint = device.getEndpoint(1);
+    if (!endpoint) return;
+
+    const nextState = {...device.meta.state, preset: PROGRAM_RETURN_PRESET, system_mode: 'heat'};
+    Object.assign(nextState, applyPresetSetpointToState(nextState, PROGRAM_RETURN_PRESET));
+
+    await sendPresetMode(endpoint, PROGRAM_RETURN_PRESET);
+    await sleep(300);
+    await tuya.sendDataPointValue(endpoint, 50, Math.round(Number(nextState.current_heating_setpoint) * 10));
+    await sleep(300);
+    await applyThermostatDecision(endpoint, nextState);
+}
+
+function scheduleProgramTimer(device, startedAt = Date.now()) {
+    const key = getEntityKey(device);
+    if (!key || !device) return;
+
+    const until = startedAt + PROGRAM_DURATION_MS;
+    const currentTimer = programTimers.get(key);
+    if (currentTimer && currentTimer.until === until) return;
+
+    clearProgramTimer(device);
+
+    const timeoutId = setTimeout(() => {
+        void revertProgramPreset(device);
+    }, Math.max(0, until - Date.now()));
+
+    programTimers.set(key, {timeoutId, until});
+}
+
+function extractPresetFromTuyaMessage(eventData) {
+    const dpValues = eventData && eventData.data && Array.isArray(eventData.data.dpValues) ? eventData.data.dpValues : [];
+    for (const dpValue of dpValues) {
+        if (dpValue.dp === 2 && dpValue.datatype === 4) {
+            const data = normalizeData(dpValue.data);
+            if (data.length > 0) return normalizePreset(modeDpToStr[data[0]] ?? 'comfort');
+        }
+    }
+    return undefined;
 }
 
 function getComfortSetpoint(state) {
@@ -102,18 +184,20 @@ function getComfortSetpoint(state) {
 }
 
 function getPresetTemperatureKey(preset) {
-    if (preset === 'comfort') return 'comfort_temperature';
-    if (preset === 'eco') return 'eco_temperature';
-    if (preset === 'holiday') return 'holiday_temperature';
-    if (preset === 'hors_gel') return 'hors_temperature';
+    const controlPreset = getControlPreset(preset);
+    if (controlPreset === 'comfort') return 'comfort_temperature';
+    if (controlPreset === 'eco') return 'eco_temperature';
+    if (controlPreset === 'holiday') return 'holiday_temperature';
+    if (controlPreset === 'hors_gel') return 'hors_temperature';
     return undefined;
 }
 
 function getPresetSetpoint(state, preset) {
-    if (preset === 'comfort') return getComfortSetpoint(state);
-    if (preset === 'eco') return Number(state.eco_temperature ?? DEFAULT_SETPOINTS.eco);
-    if (preset === 'holiday') return Number(state.holiday_temperature ?? DEFAULT_SETPOINTS.holiday);
-    if (preset === 'hors_gel') return Number(state.hors_temperature ?? DEFAULT_SETPOINTS.hors_gel);
+    const controlPreset = getControlPreset(preset);
+    if (controlPreset === 'comfort') return getComfortSetpoint(state);
+    if (controlPreset === 'eco') return Number(state.eco_temperature ?? DEFAULT_SETPOINTS.eco);
+    if (controlPreset === 'holiday') return Number(state.holiday_temperature ?? DEFAULT_SETPOINTS.holiday);
+    if (controlPreset === 'hors_gel') return Number(state.hors_temperature ?? DEFAULT_SETPOINTS.hors_gel);
     return getComfortSetpoint(state);
 }
 
@@ -141,7 +225,7 @@ function syncStoredPresetTemperature(state, preset, setpoint) {
     if (!temperatureKey) return nextState;
 
     nextState[temperatureKey] = Number(setpoint);
-    if (normalizePreset(nextState.preset ?? 'comfort') === preset) {
+    if (getControlPreset(nextState.preset ?? 'comfort') === getControlPreset(preset)) {
         nextState.current_heating_setpoint = Number(setpoint);
     }
 
@@ -158,7 +242,7 @@ function getThermostatDecision(state) {
         return {preset: 'off', systemMode: 'off', heating: false};
     }
 
-    const targetSetpoint = Number(state.current_heating_setpoint ?? DEFAULT_SETPOINTS.comfort);
+    const targetSetpoint = Number(state.current_heating_setpoint ?? getPresetSetpoint(state, preset));
 
     if (!Number.isFinite(localTemperature)) {
         return {
@@ -229,6 +313,12 @@ const fzLocal = {
                 if (dp === 1) {
                     result.device_on = data[0] === 1;
                 }
+            } else if (dt === 4) { // enum
+                if (dp === 2 && data.length > 0) {
+                    const preset = normalizePreset(modeDpToStr[data[0]] ?? 'comfort');
+                    result.preset = preset;
+                    result.system_mode = preset === 'off' ? 'off' : 'heat';
+                }
             } else if (dt === 2) { // 32-bit signed value
                 const raw = readUint32(data);
                 // treat as signed
@@ -251,6 +341,10 @@ const fzLocal = {
                 else if (dp === 116 && v >= 50) result.hors_temperature = v / 10;
                 else if (dp === 117 && v >= 50) result.eco_temperature = v / 10;
             }
+        }
+
+        if (result.preset !== undefined && result.preset !== 'off' && result.current_heating_setpoint === undefined) {
+            Object.assign(result, applyPresetSetpointToState({...((meta && meta.state) ? meta.state : {}), ...result}, result.preset));
         }
 
         // Preserve a usable climate state across restarts until the thermostat
@@ -284,6 +378,8 @@ const tzLocal = {
             nextState.system_mode = mapped === 'off' ? 'off' : 'heat';
             if (mapped !== 'off') {
                 Object.assign(nextState, applyPresetSetpointToState(nextState, mapped));
+                await sendPresetMode(entity, mapped);
+                await sleep(300);
                 await tuya.sendDataPointValue(entity, 50, Math.round(Number(nextState.current_heating_setpoint) * 10));
                 await sleep(300);
             }
@@ -396,8 +492,18 @@ module.exports = {
         if (!eventDevice || !['message', 'start', 'deviceAnnounce'].includes(eventType)) return;
 
         const state = eventDevice.meta && eventDevice.meta.state ? eventDevice.meta.state : {};
-        const preset = normalizePreset(state.preset ?? 'comfort');
+        const reportedPreset = eventType === 'message' ? extractPresetFromTuyaMessage(eventData) : undefined;
+        const preset = normalizePreset(reportedPreset ?? state.preset ?? 'comfort');
         const localTemperature = Number(state.local_temperature ?? state.temp_current);
+
+        if (reportedPreset === 'program') {
+            scheduleProgramTimer(eventDevice);
+        } else if (reportedPreset && reportedPreset !== 'program') {
+            clearProgramTimer(eventDevice);
+        } else if ((eventType === 'start' || eventType === 'deviceAnnounce') && preset === 'program') {
+            scheduleProgramTimer(eventDevice);
+        }
+
         if (preset === 'off' || !Number.isFinite(localTemperature)) return;
 
         if (eventType === 'message') {
