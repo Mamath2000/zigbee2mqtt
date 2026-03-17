@@ -19,10 +19,10 @@ const e = require('zigbee-herdsman-converters/lib/exposes');
 // dp 107: energy_all      (value, ro) kWh, scale 1
 
 // Observed on this device variant:
-// 0=comfort, 1=eco, 2=hors_gel, 4=holiday, 5=program
-const PRESETS = ['off', 'comfort', 'eco', 'hors_gel', 'holiday', 'program'];
-const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'holiday', 5: 'program'};
-const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2, holiday: 4};
+// 0=comfort, 1=eco, 2=hors_gel, 4=no-led state, 5=program
+const PRESETS = ['off', 'comfort', 'eco', 'hors_gel', 'program'];
+const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'off', 5: 'program'};
+const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2};
 const HEAT_MODE = 'comfort';
 const DEFAULT_HYSTERESIS = 0.5;
 const PROGRAM_DURATION_MS = 2 * 60 * 60 * 1000;
@@ -30,7 +30,6 @@ const PROGRAM_RETURN_PRESET = 'eco';
 const DEFAULT_SETPOINTS = {
     comfort: 20,
     eco: 16,
-    holiday: 18,
     hors_gel: 8,
 };
 const programTimers = new Map();
@@ -86,7 +85,8 @@ function normalizePreset(value) {
     const aliasMap = {
         hors: 'hors_gel',
         'hors-gel': 'hors_gel',
-        holidays: 'holiday',
+        holiday: 'off',
+        holidays: 'off',
         manual: 'comfort',
         heat: 'comfort',
     };
@@ -187,7 +187,6 @@ function getPresetTemperatureKey(preset) {
     const controlPreset = getControlPreset(preset);
     if (controlPreset === 'comfort') return 'comfort_temperature';
     if (controlPreset === 'eco') return 'eco_temperature';
-    if (controlPreset === 'holiday') return 'holiday_temperature';
     if (controlPreset === 'hors_gel') return 'hors_temperature';
     return undefined;
 }
@@ -196,7 +195,6 @@ function getPresetSetpoint(state, preset) {
     const controlPreset = getControlPreset(preset);
     if (controlPreset === 'comfort') return getComfortSetpoint(state);
     if (controlPreset === 'eco') return Number(state.eco_temperature ?? DEFAULT_SETPOINTS.eco);
-    if (controlPreset === 'holiday') return Number(state.holiday_temperature ?? DEFAULT_SETPOINTS.holiday);
     if (controlPreset === 'hors_gel') return Number(state.hors_temperature ?? DEFAULT_SETPOINTS.hors_gel);
     return getComfortSetpoint(state);
 }
@@ -326,7 +324,6 @@ const fzLocal = {
                 if (dp === 16) result.local_temperature = decodeTempCurrent(v);
                 else if (dp === 19) result.local_temperature_calibration = v;
                 else if (dp === 20) result.fault = v;
-                else if (dp === 24 && v >= 50) result.holiday_temperature = v / 10;
                 else if (dp === 50 && v >= 50) {
                     result.current_heating_setpoint = v / 10;
                     result.comfort_temperature = v / 10;
@@ -417,17 +414,6 @@ const tzLocal = {
             await tuya.sendDataPointValue(entity, 50, Math.round(Number(value) * 10));
             const nextState = syncStoredPresetTemperature(meta.state ?? {}, 'comfort', value);
             return applyThermostatDecision(entity, nextState);
-        },
-    },
-    holiday_temperature: {
-        key: ['holiday_temperature'],
-        convertSet: async (entity, key, value, meta) => {
-            await tuya.sendDataPointValue(entity, 24, Math.round(value * 10));
-            const nextState = syncStoredPresetTemperature(meta.state ?? {}, 'holiday', value);
-            if (normalizePreset(nextState.preset) === 'holiday') {
-                return applyThermostatDecision(entity, nextState);
-            }
-            return {state: {holiday_temperature: Number(value)}};
         },
     },
     eco_temperature: {
@@ -526,7 +512,6 @@ module.exports = {
             .withLocalTemperatureCalibration(-9, 9, 1, e.access.STATE_SET),
         e.numeric('hysteresis', e.access.STATE_SET).withUnit('°C').withValueMin(0.5).withValueMax(5).withValueStep(0.5).withDescription('Hystérésis thermique (dp_103 temp_sensitivity)'),
         e.numeric('comfort_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode confort'),
-        e.numeric('holiday_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode vacances'),
         e.numeric('eco_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne mode éco'),
         e.numeric('hors_temperature', e.access.STATE_SET).withUnit('°C').withValueMin(5).withValueMax(40).withValueStep(0.5).withDescription('Consigne hors-gel'),
         e.numeric('voltage', e.access.STATE).withUnit('V').withDescription('Tension'),

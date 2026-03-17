@@ -50,8 +50,6 @@ devices:
         mode: box
       eco_temperature:
         mode: box
-      holiday_temperature:
-        mode: box
       hors_temperature:
         mode: box
       hysteresis:
