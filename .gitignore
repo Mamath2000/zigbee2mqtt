@@ -1,3 +1,4 @@
 config/log/*.log
 log/
 config/database.db
+config/state.json
