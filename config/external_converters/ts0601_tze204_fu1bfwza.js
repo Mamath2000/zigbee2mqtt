@@ -25,14 +25,11 @@ const modeDpToStr = {0: 'comfort', 1: 'eco', 2: 'hors_gel', 4: 'off', 5: 'progra
 const modeStrToDp = {eco: 1, comfort: 0, program: 5, hors_gel: 2};
 const HEAT_MODE = 'comfort';
 const DEFAULT_HYSTERESIS = 0.5;
-const PROGRAM_DURATION_MS = 2 * 60 * 60 * 1000;
-const PROGRAM_RETURN_PRESET = 'eco';
 const DEFAULT_SETPOINTS = {
     comfort: 20,
     eco: 16,
     hors_gel: 8,
 };
-const programTimers = new Map();
 
 function isValidVoltage(value) {
     return value >= 100 && value <= 260;
@@ -108,58 +105,21 @@ function getEntityKey(entityOrDevice) {
     return undefined;
 }
 
+function getDevice(entityOrDevice, meta) {
+    if (entityOrDevice && entityOrDevice.ieeeAddr) return entityOrDevice;
+    if (entityOrDevice && typeof entityOrDevice.getDevice === 'function') {
+        const device = entityOrDevice.getDevice();
+        if (device) return device;
+    }
+    if (meta && meta.device) return meta.device;
+    return undefined;
+}
+
 async function sendPresetMode(entity, preset) {
     const modeDp = modeStrToDp[preset];
     if (modeDp !== undefined) {
         await tuya.sendDataPointEnum(entity, 2, modeDp);
     }
-}
-
-function clearProgramTimer(entityOrDevice) {
-    const key = getEntityKey(entityOrDevice);
-    if (!key) return;
-
-    const activeTimer = programTimers.get(key);
-    if (activeTimer) {
-        clearTimeout(activeTimer.timeoutId);
-        programTimers.delete(key);
-    }
-}
-
-async function revertProgramPreset(device) {
-    clearProgramTimer(device);
-
-    if (!device || !device.meta || !device.meta.state) return;
-    if (normalizePreset(device.meta.state.preset) !== 'program') return;
-
-    const endpoint = device.getEndpoint(1);
-    if (!endpoint) return;
-
-    const nextState = {...device.meta.state, preset: PROGRAM_RETURN_PRESET, system_mode: 'heat'};
-    Object.assign(nextState, applyPresetSetpointToState(nextState, PROGRAM_RETURN_PRESET));
-
-    await sendPresetMode(endpoint, PROGRAM_RETURN_PRESET);
-    await sleep(300);
-    await tuya.sendDataPointValue(endpoint, 50, Math.round(Number(nextState.current_heating_setpoint) * 10));
-    await sleep(300);
-    await applyThermostatDecision(endpoint, nextState);
-}
-
-function scheduleProgramTimer(device, startedAt = Date.now()) {
-    const key = getEntityKey(device);
-    if (!key || !device) return;
-
-    const until = startedAt + PROGRAM_DURATION_MS;
-    const currentTimer = programTimers.get(key);
-    if (currentTimer && currentTimer.until === until) return;
-
-    clearProgramTimer(device);
-
-    const timeoutId = setTimeout(() => {
-        void revertProgramPreset(device);
-    }, Math.max(0, until - Date.now()));
-
-    programTimers.set(key, {timeoutId, until});
 }
 
 function extractPresetFromTuyaMessage(eventData) {
@@ -380,7 +340,8 @@ const tzLocal = {
                 await tuya.sendDataPointValue(entity, 50, Math.round(Number(nextState.current_heating_setpoint) * 10));
                 await sleep(300);
             }
-            return applyThermostatDecision(entity, nextState);
+            const result = await applyThermostatDecision(entity, nextState);
+            return result;
         },
     },
     system_mode: {
@@ -481,14 +442,6 @@ module.exports = {
         const reportedPreset = eventType === 'message' ? extractPresetFromTuyaMessage(eventData) : undefined;
         const preset = normalizePreset(reportedPreset ?? state.preset ?? 'comfort');
         const localTemperature = Number(state.local_temperature ?? state.temp_current);
-
-        if (reportedPreset === 'program') {
-            scheduleProgramTimer(eventDevice);
-        } else if (reportedPreset && reportedPreset !== 'program') {
-            clearProgramTimer(eventDevice);
-        } else if ((eventType === 'start' || eventType === 'deviceAnnounce') && preset === 'program') {
-            scheduleProgramTimer(eventDevice);
-        }
 
         if (preset === 'off' || !Number.isFinite(localTemperature)) return;
 
